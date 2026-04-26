@@ -1,0 +1,57 @@
+server:
+  port: 7777
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: farming-trace-backend
+  
+  datasource:
+    # 与 Navicat 连接「毕业设计」同一台 MySQL：库名 farming_trace（左侧该库）
+    # 主机/端口按你 Navicat「常规」里填写；本机默认 localhost:3306
+    url: jdbc:mysql://localhost:3306/farming_trace?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    # 与 Navicat「毕业设计」里保存的密码一致：无密码可保持下行；有密码可改为 password: '你的密码'，或设环境变量 SPRING_DATASOURCE_PASSWORD
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+# FISCO BCOS 配置
+fisco:
+  group-id: 1
+  chain-id: 1
+  # SDK配置文件路径
+  cert-path: classpath:fisco/config.toml
+  # 强制真实模式：不再使用 mock
+  mock-mode: false
+
+# 合约地址配置（部署后更新）
+contract:
+  batch-registry: ""
+  feed-record: ""
+  vet-record: ""
+  inspection-record: ""
+  transfer-record: ""
+
+# Swagger 配置
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.trace: DEBUG
+    org.fisco.bcos: DEBUG
+

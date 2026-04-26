@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农产品溯源查询</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { max-width: 750px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 30px 0; background: linear-gradient(135deg, #1890ff 0%, #52c41a 100%); color: white; border-radius: 12px 12px 0 0; }
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .search-box { background: white; padding: 20px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px 16px; border: 2px solid #e8e8e8; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
+        input:focus { outline: none; border-color: #1890ff; }
+        button { padding: 12px 24px; background: #1890ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        button:hover { background: #40a9ff; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        .card h3 { color: #1890ff; margin-bottom: 16px; font-size: 16px; border-bottom: 2px solid #1890ff; padding-bottom: 8px; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .info-item { padding: 8px 0; }
+        .info-item label { color: #888; font-size: 12px; display: block; margin-bottom: 4px; }
+        .info-item span { color: #333; font-size: 14px; }
+        .timeline { position: relative; padding-left: 20px; }
+        .timeline::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: #e8e8e8; }
+        .timeline-item { position: relative; padding: 12px 16px; margin-bottom: 12px; background: #fafafa; border-radius: 8px; margin-left: 20px; }
+        .timeline-item::before { content: ''; position: absolute; left: -23px; top: 16px; width: 10px; height: 10px; background: #1890ff; border-radius: 50%; border: 2px solid white; }
+        .timeline-item h4 { margin-bottom: 8px; font-size: 14px; }
+        .timeline-item p { color: #666; font-size: 13px; margin-bottom: 4px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
+        .tag-egg { background: #fff7e6; color: #fa8c16; }
+        .tag-wool { background: #f6ffed; color: #52c41a; }
+        .tag-milk { background: #e6f7ff; color: #1890ff; }
+        .tag-meat { background: #fff1f0; color: #ff4d4f; }
+        .tag-default { background: #f5f5f5; color: #666; }
+        .tag-feed { background: #fff7e6; color: #fa8c16; }
+        .tag-vet { background: #e6f7ff; color: #1890ff; }
+        .tag-growth { background: #f6ffed; color: #52c41a; }
+        .loading { text-align: center; padding: 40px; color: #999; }
+        .loading::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
+        .error { color: #ff4d4f; text-align: center; padding: 20px; background: #fff1f0; border-radius: 8px; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; }
+        .status-0 { background: #e6f7ff; color: #1890ff; }
+        .status-1 { background: #f6ffed; color: #52c41a; }
+        .status-2 { background: #fff7e6; color: #fa8c16; }
+        .status-3 { background: #f9f0ff; color: #722ed1; }
+        .status-4 { background: #fff1f0; color: #ff4d4f; }
+        .category-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px; }
+        .category-poultry { background: #fff7e6; color: #fa8c16; }
+        .category-livestock { background: #f6ffed; color: #52c41a; }
+        .category-aquatic { background: #e6f7ff; color: #1890ff; }
+        .voided { opacity: 0.5; text-decoration: line-through; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>农产品溯源查询</h1>
+            <p>扫描二维码或输入养殖群ID查询</p>
+        </div>
+        <div class="search-box">
+            <div class="input-group">
+                <input type="text" id="groupId" placeholder="请输入养殖群ID">
+                <button onclick="searchTrace()">查询</button>
+            </div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.__TRACE_API_BASE__ || 'http://127.0.0.1:8081';
+
+        async function searchTrace() {
+            const groupId = document.getElementById('groupId').value.trim();
+            const resultDiv = document.getElementById('result');
+            if (!groupId) { resultDiv.innerHTML = '<div class="error">请输入养殖群ID</div>'; return; }
+            resultDiv.innerHTML = '<div class="loading">正在查询</div>';
+            try {
+                const url = `${API_BASE}/api/trace/${encodeURIComponent(groupId)}`;
+                const response = await fetch(url);
+                const text = await response.text();
+                let data;
+                try { data = JSON.parse(text); } catch (e) {
+                    resultDiv.innerHTML = '<div class="error">接口返回异常，请确认后端已启动（端口8081）</div>'; return;
+                }
+                if (data.success && data.data) { displayResult(data.data); }
+                else { resultDiv.innerHTML = `<div class="error">${data.message || '查询失败'}</div>`; }
+            } catch (error) { resultDiv.innerHTML = `<div class="error">网络错误: ${error.message}</div>`; }
+        }
+
+        function getProductTypeTag(productType) {
+            const tags = { 'EGG': '<span class="tag tag-egg">🥚 蛋类</span>', 'WOOL': '<span class="tag tag-wool">🐑 毛类</span>', 'MILK': '<span class="tag tag-milk">🥛 奶类</span>', 'MEAT': '<span class="tag tag-meat">🥩 肉类</span>', 'OTHER': '<span class="tag tag-default">📦 其他</span>' };
+            return tags[productType] || tags['OTHER'];
+        }
+        function getCategoryClass(category) { return { 'POULTRY': 'category-poultry', 'LIVESTOCK': 'category-livestock', 'AQUATIC': 'category-aquatic' }[category] || ''; }
+        function getCategoryText(category) { return { 'POULTRY': '禽类', 'LIVESTOCK': '牲畜', 'AQUATIC': '水产' }[category] || category; }
+        function getStatusClass(status) { return 'status-' + (status || 0); }
+        function getStatusText(status) { return ['在养', '出栏', '加工中', '已加工', '已销售'][status] || '未知'; }
+        function isVoided(status) { return status === 1; }
+
+        function displayResult(traceInfo) {
+            const resultDiv = document.getElementById('result');
+            let html = '';
+
+            // 养殖群基本信息
+            if (traceInfo.batch) {
+                const batch = traceInfo.batch;
+                const categoryClass = getCategoryClass(batch.speciesCategory);
+                const categoryText = batch.speciesCategory ? `<span class="category-badge ${categoryClass}">${getCategoryText(batch.speciesCategory)}</span>` : '';
+                html += `<div class="card"><h3>养殖群信息</h3><div class="info-grid">
+                    <div class="info-item"><label>养殖群ID</label><span>${batch.groupId || '-'}</span></div>
+                    <div class="info-item"><label>养殖场</label><span>${batch.farmId || '-'}</span></div>
+                    <div class="info-item"><label>品种</label><span>${batch.species || '-'}${categoryText}</span></div>
+                    <div class="info-item"><label>存栏数量</label><span>${batch.quantity || '-'}</span></div>
+                    <div class="info-item"><label>所在区域</label><span>${batch.location || '-'}</span></div>
+                    <div class="info-item"><label>当前状态</label><span class="status-badge ${getStatusClass(batch.status)}">${getStatusText(batch.status)}</span></div>
+                </div></div>`;
+            }
+
+            // 农副产品
+            if (traceInfo.byProducts && traceInfo.byProducts.length > 0) {
+                html += `<div class="card"><h3>🏠 农副产品产出</h3><div class="timeline">`;
+                traceInfo.byProducts.forEach(product => {
+                    const voidClass = isVoided(product.status) ? 'voided' : '';
+                    html += `<div class="timeline-item ${voidClass}">
+                        <h4>${getProductTypeTag(product.productType)} ${product.productName || '-'}</h4>
+                        <p>数量: ${product.quantity || 0} ${product.unit || ''}</p>
+                        <p>生产日期: ${product.productionDate ? new Date(product.productionDate * 1000).toLocaleDateString() : '-'}</p>
+                        <p>质量等级: <strong style="color: #52c41a">${product.qualityGrade || '待检测'}</strong></p>
+                        ${product.storageMethod ? `<p>存储方式: ${product.storageMethod}</p>` : ''}
+                        ${isVoided(product.status) ? `<p style="color: #ff4d4f">⚠️ 此记录已作废</p>` : ''}
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            // 溯源时间线
+            html += `<div class="card"><h3>📋 溯源时间线</h3><div class="timeline">`;
+
+            // 成长记录
+            if (traceInfo.growthRecords && traceInfo.growthRecords.length > 0) {
+                traceInfo.growthRecords.forEach(record => {
+                    const voidClass = isVoided(record.status) ? 'voided' : '';
+                    html += `<div class="timeline-item ${voidClass}">
+                        <h4><span class="tag tag-growth">📊 成长记录</span> ${record.recordDate ? new Date(record.recordDate * 1000).toLocaleDateString() : '-'}</h4>
+                        <p>发育阶段: ${record.growthStageText || record.growthStage || '-'}</p>
+                        <p>平均体重: ${record.avgWeight ? record.avgWeight + ' kg' : '-'}</p>
+                        <p>健康状态: <strong style="color: ${record.healthStatus === 'HEALTHY' ? '#52c41a' : record.healthStatus === 'SICK' ? '#ff4d4f' : '#1890ff'}">${record.healthStatusText || '-'}</strong></p>
+                        ${record.survivalCount != null ? `<p>存活数: ${record.survivalCount}</p>` : ''}
+                        ${record.inspector ? `<p>检测员: ${record.inspector}</p>` : ''}
+                        ${isVoided(record.status) ? `<p style="color: #ff4d4f">⚠️ 此记录已作废</p>` : ''}
+                    </div>`;
+                });
+            }
+
+            // 饲料投喂记录
+            if (traceInfo.feedRecords && traceInfo.feedRecords.length > 0) {
+                traceInfo.feedRecords.forEach(feed => {
+                    const voidClass = isVoided(feed.status) ? 'voided' : '';
+                    html += `<div class="timeline-item ${voidClass}">
+                        <h4><span class="tag tag-feed">🌾 饲料投喂</span> ${feed.feedDate ? new Date(feed.feedDate * 1000).toLocaleDateString() : '-'}</h4>
+                        <p>饲料类型: ${feed.feedTypeText || feed.feedType || '-'} | 品牌: ${feed.feedBrand || '-'}</p>
+                        <p>投喂量: ${feed.amount || '-'} kg | 成本: ${feed.totalCost ? '¥' + feed.totalCost : '-'}</p>
+                        <p>投喂方式: ${feed.feedingMethodText || '-'} | 操作人: ${feed.operator || '-'}</p>
+                        ${isVoided(feed.status) ? `<p style="color: #ff4d4f">⚠️ 此记录已作废</p>` : ''}
+                    </div>`;
+                });
+            }
+
+            // 兽医/疫苗记录
+            if (traceInfo.vetRecords && traceInfo.vetRecords.length > 0) {
+                traceInfo.vetRecords.forEach(vet => {
+                    const voidClass = isVoided(vet.status) ? 'voided' : '';
+                    html += `<div class="timeline-item ${voidClass}">
+                        <h4><span class="tag tag-vet">💉 ${vet.recordTypeText || '兽医记录'}</span> ${vet.operationDate ? new Date(vet.operationDate * 1000).toLocaleDateString() : '-'}</h4>
+                        ${vet.recordType === 0 ? `<p>疫苗类型: ${vet.vaccineTypeText || '-'}</p>` : ''}
+                        <p>药品: ${vet.medicineName || '-'}${vet.dosage ? ' | 剂量: ' + vet.dosage + (vet.dosageUnit || '') : ''}</p>
+                        ${vet.vetName ? `<p>兽医: ${vet.vetName}${vet.vetLicense ? ' (执照: ' + vet.vetLicense + ')' : ''}</p>` : ''}
+                        ${vet.diagnosis ? `<p>诊断: ${vet.diagnosis}</p>` : ''}
+                        ${isVoided(vet.status) ? `<p style="color: #ff4d4f">⚠️ 此记录已作废</p>` : ''}
+                    </div>`;
+                });
+            }
+
+            // 检验检测记录
+            if (traceInfo.inspections && traceInfo.inspections.length > 0) {
+                traceInfo.inspections.forEach(insp => {
+                    html += `<div class="timeline-item">
+                        <h4>🔬 检验检测</h4>
+                        <p>检测机构: ${insp.inspectorName || '-'}</p>
+                        <p>结果: <strong style="color: ${insp.result === 0 ? '#52c41a' : '#ff4d4f'}">${insp.resultText || '-'}</strong></p>
+                        <p>时间: ${insp.inspectDate ? new Date(insp.inspectDate * 1000).toLocaleString() : '-'}</p>
+                    </div>`;
+                });
+            }
+
+            // 空状态
+            if ((!traceInfo.feedRecords || traceInfo.feedRecords.length === 0) &&
+                (!traceInfo.vetRecords || traceInfo.vetRecords.length === 0) &&
+                (!traceInfo.growthRecords || traceInfo.growthRecords.length === 0) &&
+                (!traceInfo.inspections || traceInfo.inspections.length === 0)) {
+                html += `<div class="timeline-item"><h4>暂无详细记录</h4><p>该养殖群暂无成长、饲料、兽医等详细记录</p></div>`;
+            }
+
+            html += `</div></div>`;
+            resultDiv.innerHTML = html;
+        }
+
+        document.getElementById('groupId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { searchTrace(); }
+        });
+    </script>
+</body>
+</html>

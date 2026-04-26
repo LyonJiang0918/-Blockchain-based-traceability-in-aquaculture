@@ -1,0 +1,7 @@
+[cryptoMaterial]
+# Use a repo-relative path (avoid WSL-style /mnt/c/... paths).
+certPath = "src/main/resources/fisco/conf"
+
+[network]
+peers=["127.0.0.1:20200"]
+defaultGroup="group0"

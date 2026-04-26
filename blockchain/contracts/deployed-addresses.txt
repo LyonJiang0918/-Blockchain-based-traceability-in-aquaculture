@@ -1,0 +1,10 @@
+# 智能合约部署配置
+# 部署后将合约地址填入下方
+
+# 合约地址配置（部署后更新）
+contract:
+  batch-registry: ""
+  feed-record: ""
+  vet-record: ""
+  inspection-record: ""
+  transfer-record: ""

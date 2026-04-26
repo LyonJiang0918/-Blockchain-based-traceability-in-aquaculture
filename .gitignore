@@ -1,0 +1,28 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Maven
+backend/target/
+target/
+
+# Logs
+*.log
+backend/log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local env/config
+.env
+node_modules
+tassl-1.1.1b
+jdk23/
+jdk17.tar.gz

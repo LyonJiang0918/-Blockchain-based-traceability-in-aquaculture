@@ -1,0 +1,27 @@
+[chain]
+    sm_crypto=false
+    group_id=group0
+    chain_id=chain0
+
+[consensus]
+    consensus_type=pbft
+    block_tx_count_limit=1000
+    leader_period=1
+    epoch_sealer_num=4
+    epoch_block_num=1000
+    node.0=98550ed807887d93f9d3810c18e102d88f2c980ece62dc3bbd7726803517c5a48921ba140d900d93d749d56808260f4dee14d0db4897b30f12ecfb8cc655def3
+    node.1=ec71491bd34b383d8bc4c01f1e114cc27cf3fb7589d8fd55eb03290e4ef68e2e851e042ae298697d1d91b6bf9773dbaecf9546da660e63193e344c2232174e1c
+    node.2=601ab62966ca478ed595d89c9316d1ac78c7b542c1beaa0d23d7132b28e3733e62cf9d468039affd9485618e48547bb4bb7bcb644ff956099733dff50189bcb7
+    node.3=d191ed0a79b4db781759af3569d808ad8777659de503a6d5d6c62b5a837a18f9701691b3321abadbfaea8b88880d4e33fb2daec817a6792f9f32bf9a04f3ecd8
+
+[version]
+    compatibility_version=3.6.0
+
+[tx]
+    gas_limit=3000000000
+
+[executor]
+    is_wasm = false
+    is_auth_check = false
+    auth_admin_account = 0x0000000000000000000000000000000000000000
+    is_serial_execute = true

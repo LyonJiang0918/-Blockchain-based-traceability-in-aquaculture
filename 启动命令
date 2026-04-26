@@ -1,0 +1,39 @@
+下面按“你自己手动启动”的方式写清楚：在哪个终端跑、输入哪些命令。
+
+1) 启动区块链（WSL 里跑）
+在 Windows 打开 WSL（Ubuntu）终端，执行：
+
+bash ~/fisco/nodes/127.0.0.1/start_all.sh
+可选检查端口（WSL 里）：
+
+ss -lntp | grep 20200
+2) 启动后端（Windows CMD 里跑）
+打开 cmd，执行：
+
+cd /d C:\Users\24835\Desktop\F\backend
+run_backend.cmd
+后端默认端口是 7777。
+
+3) 启动管理端 Admin（Windows CMD 里跑）
+打开另一个 cmd，执行：
+
+cd /d C:\Users\24835\Desktop\F\frontend\admin
+npm.cmd install
+npm.cmd run dev
+管理端地址：http://localhost:3000/
+
+4) 启动消费者端 Consumer（Windows CMD 里跑）
+打开另一个 cmd，执行：
+
+cd /d C:\Users\24835\Desktop\F\frontend\consumer
+node server.js
+消费者端地址：http://localhost:8082/（/api 会代理到后端 7777）
+
+一键启动（Windows CMD 里跑）
+
+cd /d C:\Users\24835\Desktop\F
+start_all.bat
+一键停止（Windows CMD 里跑）
+
+cd /d C:\Users\24835\Desktop\F
+stop_all.bat

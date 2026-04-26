@@ -1,0 +1,8 @@
+{
+    "nodeIP": "127.0.0.1",
+    "nodePort": "30300",
+    "rpcPort": "20200",
+    "chainID": 1,
+    "groupID": 1,
+    "timeout": 600000
+}

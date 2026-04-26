@@ -1,0 +1,44 @@
+# 开发环境配置
+server:
+  port: 7777
+
+spring:
+  application:
+    name: farming-trace-backend
+
+  datasource:
+    # 与 Navicat 连接「毕业设计」同一台 MySQL：库名 farming_trace
+    url: jdbc:mysql://172.18.224.1:3306/farming_trace?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+# FISCO BCOS 配置
+fisco:
+  mock-mode: false
+  certPath: classpath:fisco/config.toml
+  group-id: 0
+
+# 合约地址配置
+contract:
+  batch-registry: ""
+  feed-record: ""
+  vet-record: ""
+  inspection-record: ""
+  transfer-record: ""
+
+logging:
+  level:
+    root: INFO
+    com.trace: DEBUG
+
+
